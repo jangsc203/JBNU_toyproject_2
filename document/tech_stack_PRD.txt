@@ -1,0 +1,37 @@
+# Tech Stack PRD (기술 스택 요구사항 정의서)
+
+## 1. 개요
+본 문서는 '전남 특산 농수산물 가격 변동 및 수급 위험 분석 시스템' 구현을 위한 기술 스택 및 아키텍처 원칙을 정의합니다.
+
+## 2. 개발 환경
+- IDE & AI 어시스턴트: VS Code + Codex (바이브 코딩)
+
+## 3. 프론트엔드 (Frontend)
+- 프레임워크: React + TypeScript + Vite
+- 역할: 사용자 화면(대시보드, 차트 렌더링), 데이터 조회 조건 입력, AI 분석/질의응답 요청, 오류 및 로딩 상태 표시
+
+## 4. 백엔드 및 서버리스 (Backend & Serverless)
+- 백엔드 제약사항: 별도의 FastAPI 또는 Express 백엔드 서버는 절대 사용하지 않음
+- 서버리스 처리: Supabase Edge Functions
+- 역할: 
+  - 정기 데이터 수집 (Cron 연동)
+  - KAMIS 외부 API 호출 및 데이터 파싱/검증/저장(upsert)
+  - 규칙 기반(Rule-based) 위험 지표 점수 계산
+  - Gemini API 호출 (임베딩 및 RAG 답변)
+  - Pinecone 등록 및 벡터 검색 연동
+
+## 5. 데이터베이스 및 스토리지 (Database)
+- 기준 데이터 저장소 (Source of Truth): Supabase Postgres
+  - 저장 내용: 품목 기준 정보, 날짜별 가격, 위험 분석 결과, 작업 이력, 대화/피드백 이력
+  - 보안: Supabase Auth를 통한 로그인 사용자 구분 및 RLS(Row Level Security) 적용을 통한 데이터 격리
+- 의미 기반 검색 (Vector DB): Pinecone
+  - 저장 내용: 가격 변화 요약, 위험 분석 문서, 종합 보고서 임베딩 벡터
+  - 제약사항: Pinecone은 파생 검색 저장소이며, 데이터 유실 시 Supabase 원본 데이터를 통해 전체 재구축이 가능해야 함
+
+## 6. AI 및 외부 연동 (AI & External API)
+- 생성형 AI: Gemini API (텍스트 임베딩 생성, RAG 근거 기반 자연어 답변 생성, 보고서 요약)
+- 외부 데이터: KAMIS Open API (농수산물 일별 도소매 가격 데이터)
+
+## 7. 핵심 설계 원칙 및 보안
+- 브라우저 직접 호출 금지: 프론트엔드는 보안을 위해 KAMIS, Pinecone, Gemini를 직접 호출하지 않습니다.
+- 비밀키 보호: API 비밀키는 브라우저에 노출되지 않도록 Supabase Edge Functions의 Secrets에서만 관리합니다.

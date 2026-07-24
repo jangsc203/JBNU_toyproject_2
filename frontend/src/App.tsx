@@ -1,4 +1,4 @@
-﻿import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { createClient, type Session } from '@supabase/supabase-js'
 import './App.css'
@@ -1821,6 +1821,7 @@ async function fetchPriceRecords(productIds: string[], countyCodes: string[], da
     product_id: `in.(${productIds.join(',')})`,
     county_code: `in.(${countyCodes.join(',')})`,
     price_date: `gte.${startDate}`,
+    market_name: 'eq.recent_30d',
     order: 'price_date.asc',
   })
 
